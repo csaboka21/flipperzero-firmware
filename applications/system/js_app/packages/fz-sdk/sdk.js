@@ -85,22 +85,14 @@ async function build(config) {
 
 async function upload(config) {
     const appFile = fs.readFileSync(config.input, "utf8");
-    const flippers = (await SerialPort.list()).filter(x => x.serialNumber?.startsWith("flip_"));
+    let ports = await SerialPort.list();
 
-    if (!flippers) {
-        console.error("No Flippers found");
-        process.exit(1);
-    }
-
-    let portPath = flippers[0].path;
-    if (flippers.length > 1) {
-        port = (await prompts([{
-            type: "select",
-            name: "port",
-            message: "Select Flipper to run the app on",
-            choices: flippers.map(x => ({ title: x.serialNumber.replace("flip_", ""), value: x.path })),
-        }])).port;
-    }
+    let portPath = (await prompts([{
+        type: "select",
+        name: "port",
+        message: "Select Flipper to run the app on",
+        choices: ports.map(x => ({ title: x.path, value: x.path })),
+    }])).port;
 
     console.log(`Connecting to Flipper at ${portPath}`);
     let port = new SerialPort({ path: portPath, baudRate: 230400 });
